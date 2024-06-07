@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <title>HTML5 Canvas Winning Wheel</title>
+    <link rel="stylesheet" href="main.css" type="text/css" />
+    <script type="text/javascript" src="Winwheel.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+</head>
+<bodyclass="panel">
+    <div class="container">
+        
+        <div class="row">
+            
+            <div class="col-6">
+
+
+                <div align="center">
+                    
+                    <canvas id="canvas" class="the_wheel" width="500" height="500">
+                        <p style="color: white;" align="center">Sorry, your browser doesn't support canvas. Please try another.</p>
+                    </canvas>
+                    <div class="power_controls">
+                        <img id="spin_button" src="spin_on.png" alt="Spin" onClick="startSpin();" />
+                    </div>
+                </div>
+
+    
+                <div id= "dialog-container" class= "dialog-container">
+                    <div class= "dialog-header">Score</div>
+                    <div id= "dialog-body" class= "dialog-body"></div>
+                    <div class= "dialog-footer">
+                        <a onclick= "CustomAlert.close()">Ok</a>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="col-6" id="reloadableDiv">
+                
+            </div>
+
+        </div> <!-- #Row--->
+
+    <script>
+        var spinCount = 0;
+        var totalScore = 0;
+        var maxSpins = 6;
+
+        var theWheel = new Winwheel({
+            'outerRadius'     : 218,
+            'innerRadius'     : 66,
+            'textFontSize'    : 18,
+            'textOrientation' : 'horizontal',
+            'textAlignment'   : 'outer',
+            'numSegments'     : 8,
+            'segments'        : [
+                {'fillStyle' : '#ee1c24', 'text' : '1 Run', 'textFontSize' : 16, 'textFillStyle' : '#ffffff'},
+                {'fillStyle' : '#3cb878', 'text' : '4 Runs', 'textFontSize' : 16, 'textFillStyle' : '#ffffff'},
+                {'fillStyle' : '#f6989d', 'text' : '6 Runs', 'textFontSize' : 16, 'textFillStyle' : '#ffffff'},
+                {'fillStyle' : '#00aef0', 'text' : '2 Runs', 'textFontSize' : 16, 'textFillStyle' : '#ffffff'},
+                {'fillStyle' : '#f26522', 'text' : 'Wicket', 'textFontSize' : 16, 'textFillStyle' : '#ffffff'},
+                {'fillStyle' : '#660000', 'text' : '6 Runs', 'textFontSize' : 16, 'textFillStyle' : '#ffffff'},
+                {'fillStyle' : '#e70697', 'text' : '0 Runs', 'textFontSize' : 16, 'textFillStyle' : '#ffffff'},
+                {'fillStyle' : '#84659a', 'text' : '3 Runs', 'textFontSize' : 16, 'textFillStyle' : '#ffffff'}
+            ],
+            'animation' : {
+                'type': 'spinToStop',
+                'duration': 5,
+                'spins': 5,
+                'repeat': 0,
+                'easing': 'Power2.easeOut',
+                'yoyo': true,
+                'propertyValue': null,
+                'direction': 'clockwise',
+                '_stopAngle': null,
+                'stopAngle': null,
+                'propertyName': 'rotationAngle',
+                'callbackFinished':'alertPrize()'
+            }
+        });
+
+        var wheelSpinning = false;
+
+        function enableSpinButton() {
+            document.getElementById('spin_button').src = "spin_on.png";
+            document.getElementById('spin_button').className = "clickable";
+            wheelSpinning = false;
+        }
+
+        function disableSpinButton() {
+            document.getElementById('spin_button').src = "spin_off.png";
+            document.getElementById('spin_button').className = "";
+            wheelSpinning = true;
+        }
+
+        function startSpin() {
+            if (!wheelSpinning && spinCount < maxSpins) {
+                disableSpinButton();
+                resetWheelAnimation();
+                theWheel.startAnimation();
+                
+            }
+        }
+
+
+        function resetWheelAnimation() {
+            theWheel.animation = {
+                'type': 'spinToStop',
+                'duration': 3,
+                'spins': 7,
+                'repeat': 0,
+                'easing': 'Power4.easeOut',
+                'callbackFinished': 'alertPrize()'
+            };
+            theWheel.rotationAngle = 0; // Reset the rotation angle if necessary
+            theWheel.draw(); // Redraw the wheel with the new settings
+        }
+
+
+        function alertPrize() {
+            var winningSegment = theWheel.getIndicatedSegment();
+            var segmentText = winningSegment.text;
+
+            if (segmentText === 'Wicket') {
+
+                    if(totalScore === 0){
+
+                        totalScore = 0;
+                        //alert("You got a Wicket! Your total score is " + totalScore);
+                        CustomAlert.show('You got a Wicket! Please Try Again');
+                        //theWheel.resetAnimation();
+                        enableSpinButton();
+                        
+
+                    }else{
+
+                        totalScore = totalScore;
+                        //alert("You got a Wicket! Your total score is " + totalScore);
+                        CustomAlert.show('You got a Wicket! Your total score is ' + totalScore + ' in ' + spinCount + ' balls');
+                        //theWheel.resetAnimation();
+                        disableSpinButton();
+                        
+                    
+                    }
+
+            } else {
+                totalScore += parseInt(segmentText);
+                spinCount++;
+
+                if (spinCount >= maxSpins) {
+                    //alert("You have spun " + maxSpins + " times. Your total score is " + totalScore);
+                    CustomAlert.show("You got " + segmentText + " Your total score is " + totalScore + " You have spun " + maxSpins + " times.");
+                    //theWheel.resetAnimation();
+                    disableSpinButton();
+                    
+
+                    
+                } else {
+                    //alert("You got " + segmentText + ". Your total score is " + totalScore);
+                    CustomAlert.show("You got " + segmentText + ". Your total score is " + totalScore + ' in ' + spinCount + ' balls');
+                    //theWheel.resetAnimation();
+                    enableSpinButton();
+                    
+                    
+                }
+            }
+        }
+
+        // Initial state: enable the spin button
+        enableSpinButton();
+    </script>
+
+
+
+    <script>
+        const container = document.getElementById('dialog-container');
+        const CustomAlert = new function(msg) {
+            this.show = function(msg) {
+                let content = document.getElementById('dialog-body');
+                container.style.top = '30%';
+                container.style.opacity = 1;
+                content.textContent = msg;
+            }
+
+            this.close = function() {
+                container.style.top = '-30%';
+                container.style.opacity = 0;
+            }
+        }
+    </script>
+</body>
+</html>
